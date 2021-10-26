@@ -25,7 +25,8 @@ struct brush_pix *brush_pix_loadfolder(struct brush_pix *dst, const char *path){
     strcat(path_lua, brush_pix_fnames[BRUSH_PIX_FNAME_LUA]);
     strcat(path_img, brush_pix_fnames[BRUSH_PIX_FNAME_IMG]);
 
-    if(luaL_loadfile(dst->interface.lua, path_lua) != LUA_OK){
+    //if(luaL_loadfile(dst->interface.lua, path_lua) != LUA_OK){
+    if(luaL_dofile(dst->interface.lua, path_lua) != LUA_OK){
         free(path_lua);
         free(path_img);
         lua_close(dst->interface.lua);
@@ -46,30 +47,49 @@ void brush_pix_free(struct brush *dst){
     cairo_surface_destroy(pb->surface);
 }
 
-int brush_pix_draw(struct brush *src, struct layer *dst){
+int brush_pix_draw(struct brush *src, struct layer *dst, struct input_data *data){
     struct brush_pix *pb = (struct brush_pix *)src;
     // calculate
 
-    lua_pushnumber(src->lua, src->state.pos.x);
+#if 0
+    lua_pushnumber(src->lua, data->pos.x);
     lua_setglobal(src->lua, "src_pos_x");
-    lua_pushnumber(src->lua, src->state.pos.y);
+    lua_pushnumber(src->lua, data->pos.y);
     lua_setglobal(src->lua, "src_pos_y");
-    lua_pushnumber(src->lua, src->state.pressure);
+    lua_pushnumber(src->lua, data->press);
     lua_setglobal(src->lua, "src_pressure");
-    lua_pushnumber(src->lua, src->state.dt);
+    lua_pushnumber(src->lua, data->dt);
     lua_setglobal(src->lua, "src_dt");
-    lua_pushnumber(src->lua, src->state.speed.x);
-    lua_setglobal(src->lua, "src_speed_x");
-    lua_pushnumber(src->lua, src->state.speed.y);
-    lua_setglobal(src->lua, "src_speed_y");
-    lua_pushnumber(src->lua, src->state.tilt.x);
+    lua_pushnumber(src->lua, data->norm.x);
+    lua_setglobal(src->lua, "src_norm_x");
+    lua_pushnumber(src->lua, data->norm.y);
+    lua_setglobal(src->lua, "src_norm_y");
+    lua_pushnumber(src->lua, data->tan.x);
+    lua_setglobal(src->lua, "src_tan_x");
+    lua_pushnumber(src->lua, data->tan.y);
+    lua_setglobal(src->lua, "src_tan_y");
+    lua_pushnumber(src->lua, data->tilt.x);
     lua_setglobal(src->lua, "src_tilt_x");
-    lua_pushnumber(src->lua, src->state.tilt.y);
+    lua_pushnumber(src->lua, data->tilt.y);
     lua_setglobal(src->lua, "src_tilt_y");
+#endif
 
-    //lua_getglobal(src->lua, "f");
+    lua_getglobal(src->lua, "f");
 
-    if(lua_pcall(src->lua, 0, 0, 0) != LUA_OK){
+    lua_pushnumber(src->lua, data->pos.x);
+    lua_pushnumber(src->lua, data->pos.y);
+    lua_pushnumber(src->lua, data->press);
+    lua_pushnumber(src->lua, data->dt);
+    lua_pushnumber(src->lua, data->norm.x);
+    lua_pushnumber(src->lua, data->norm.y);
+    lua_pushnumber(src->lua, data->tan.x);
+    lua_pushnumber(src->lua, data->tan.y);
+    lua_pushnumber(src->lua, data->tilt.x);
+    lua_pushnumber(src->lua, data->tilt.y);
+
+    //g_print("%s\n", lua_tostring(src->lua, -1));
+
+    if(lua_pcall(src->lua, 10, 6, 0) != LUA_OK){
         // err
         g_print("ERR lua: %s\n", lua_tostring(src->lua, -1));
         return 0;
@@ -77,44 +97,42 @@ int brush_pix_draw(struct brush *src, struct layer *dst){
 
     struct brush_draw_param param;
 
-    lua_getglobal(src->lua, "dst_pos_x");
-    param.pos.x = lua_tonumber(src->lua, -1);
-    lua_getglobal(src->lua, "dst_pos_y");
-    param.pos.y = lua_tonumber(src->lua, -1);
-    lua_getglobal(src->lua, "dst_angle");
-    param.angle = lua_tonumber(src->lua, -1);
-    lua_getglobal(src->lua, "dst_scale_x");
-    param.scale.x = lua_tonumber(src->lua, -1);
-    lua_getglobal(src->lua, "dst_scale_y");
-    param.scale.y = lua_tonumber(src->lua, -1);
-    lua_getglobal(src->lua, "dst_opacity");
     param.opacity = lua_tonumber(src->lua, -1);
+    lua_pop(src->lua, 1);
+    param.scale.y = lua_tonumber(src->lua, -1);
+    lua_pop(src->lua, 1);
+    param.scale.x = lua_tonumber(src->lua, -1);
+    lua_pop(src->lua, 1);
+    param.angle = lua_tonumber(src->lua, -1);
+    lua_pop(src->lua, 1);
+    param.pos.y = lua_tonumber(src->lua, -1);
+    lua_pop(src->lua, 1);
+    param.pos.x = lua_tonumber(src->lua, -1);
+    lua_pop(src->lua, 1);
 
-#if 0
-    struct brush_draw_param param = {
-        .pos = svec2(10, 10),
-        .scale = svec2(1.0, 1.0),
-        .angle = 0,
-        .opacity = 1,
-    };
-#endif
+    lua_pop(src->lua, lua_gettop(src->lua));
+
     
     // draw
 
-    g_print("%lf\n", param.pos.x);
-    g_print("%lf\n", param.opacity);
+    g_print("opacity: %lf\n", param.opacity);
+    g_print("pos: %lf, %lf\n", param.pos.x, param.pos.y);
+    g_print("scale: %lf, %lf\n", param.scale.x, param.scale.y);
+    param.pos = data->pos;
 
     cairo_t *ctx = cairo_create(dst->surface);
 
     cairo_set_operator(ctx, CAIRO_OPERATOR_OVER);
 
-    cairo_scale(ctx, param.scale.x, param.scale.y);
+    cairo_scale(ctx, param.scale.x / dst->scale, param.scale.y / dst->scale);
     cairo_rotate(ctx, param.angle);
-    cairo_translate(ctx, param.pos.x, param.pos.y);
+    cairo_translate(ctx, param.pos.x - dst->x, param.pos.y - dst->x);
 
     cairo_set_source_surface(ctx, pb->surface, param.pos.y, param.pos.y);
 
     cairo_paint_with_alpha(ctx, param.opacity);
+
+    canvas_update_viewports(dst->canvas);
 
     cairo_destroy(ctx);
     return 1;

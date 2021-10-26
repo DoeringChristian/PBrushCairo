@@ -32,16 +32,8 @@ int main(int argc, char **argv){
     struct brush_pix pb;
     brush_pix_loadfolder(&pb, "res/brushes/b1/");
 
-    pb.interface.state = (struct brush_state){
-        .pos = svec2(10, 10),
-        .dt = 0,
-        .pressure = 1.0,
-        .rand = 0,
-        .speed = svec2(11, 10),
-        .tilt = svec2(0, 0),
-    };
-
-    brush_pix_draw(&pb.interface, &l2);
+    canvas_set_cur_layer(&c, &l2);
+    canvas_set_brush(&c, &pb.interface);
 
     gtk_main();
     return 0;

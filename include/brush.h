@@ -8,6 +8,7 @@
 #include <lauxlib.h>
 #include "mathc.h"
 #include "layer.h"
+#include "input.h"
 
 struct brush_state{
     double dt;
@@ -30,14 +31,14 @@ struct brush_ops;
 struct brush{
     struct brush_ops *ops;
 
-    struct brush_state state;
+    //struct brush_state state;
 
     lua_State *lua;
 };
 
 struct brush_ops{
     void (*free)(struct brush *dst);
-    int (*draw)(struct brush *src, struct layer *dst);
+    int (*draw)(struct brush *src, struct layer *dst, struct input_data *data);
 };
 
 static inline void brush_free(struct brush *dst){
@@ -45,9 +46,9 @@ static inline void brush_free(struct brush *dst){
         dst->ops->free(dst);
 }
 
-static inline int brush_draw(struct brush *src, struct layer *dst){
+static inline int brush_draw(struct brush *src, struct layer *dst, struct input_data *data){
     if(src->ops != NULL && src->ops->draw != NULL)
-        return src->ops->draw(src, dst);
+        return src->ops->draw(src, dst, data);
     return 0;
 }
 

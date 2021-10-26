@@ -4,8 +4,11 @@
 
 #include <gtk/gtk.h>
 #include "canvas.h"
+#include "input.h"
+#include "input_s.h"
 
 struct viewport{
+    struct input_ctx in_ctx;
     struct canvas *canvas;
     GtkWidget *da;
 

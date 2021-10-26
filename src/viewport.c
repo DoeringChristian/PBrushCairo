@@ -8,6 +8,8 @@ struct viewport *viewport_init(struct viewport *dst, double x, double y, double 
     dst->y = y;
     dst->angle = angle;
 
+    input_ctx_init(&dst->in_ctx, dst);
+
     g_signal_connect(G_OBJECT(dst->da), "draw", G_CALLBACK(viewport_draw), dst);
     
     gtk_widget_show_all(dst->da);
@@ -43,6 +45,7 @@ void viewport_draw(GtkWidget *area, cairo_t *cr, gpointer data){
 int viewport_set_canvas(struct viewport *dst, struct canvas *src){
     if(dst->canvas == NULL){
         dst->canvas = src;
+        darray_push_back(&dst->canvas->viewports, dst);
         return 1;
     }
     return 0;
