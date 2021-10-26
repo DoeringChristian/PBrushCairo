@@ -2,7 +2,7 @@
 
 struct mainwindow *mainwindow_init(struct mainwindow *dst){
     dst->win = gtk_window_new(GTK_WINDOW_TOPLEVEL);
-    viewport_init(&dst->vp, 0, 0, 1.0, 0);
+    viewport_init(&dst->vp, 100, 100, 1.0, 1.0);
 
     gtk_container_add(GTK_CONTAINER(dst->win), dst->vp.da);
 

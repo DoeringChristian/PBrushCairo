@@ -47,47 +47,22 @@ void brush_pix_free(struct brush *dst){
     cairo_surface_destroy(pb->surface);
 }
 
-int brush_pix_draw(struct brush *src, struct layer *dst, struct input_data *data){
+int brush_pix_draw(struct brush *src, struct layer *dst, struct input_ctx *ctx){
     struct brush_pix *pb = (struct brush_pix *)src;
     // calculate
 
-#if 0
-    lua_pushnumber(src->lua, data->pos.x);
-    lua_setglobal(src->lua, "src_pos_x");
-    lua_pushnumber(src->lua, data->pos.y);
-    lua_setglobal(src->lua, "src_pos_y");
-    lua_pushnumber(src->lua, data->press);
-    lua_setglobal(src->lua, "src_pressure");
-    lua_pushnumber(src->lua, data->dt);
-    lua_setglobal(src->lua, "src_dt");
-    lua_pushnumber(src->lua, data->norm.x);
-    lua_setglobal(src->lua, "src_norm_x");
-    lua_pushnumber(src->lua, data->norm.y);
-    lua_setglobal(src->lua, "src_norm_y");
-    lua_pushnumber(src->lua, data->tan.x);
-    lua_setglobal(src->lua, "src_tan_x");
-    lua_pushnumber(src->lua, data->tan.y);
-    lua_setglobal(src->lua, "src_tan_y");
-    lua_pushnumber(src->lua, data->tilt.x);
-    lua_setglobal(src->lua, "src_tilt_x");
-    lua_pushnumber(src->lua, data->tilt.y);
-    lua_setglobal(src->lua, "src_tilt_y");
-#endif
-
     lua_getglobal(src->lua, "f");
 
-    lua_pushnumber(src->lua, data->pos.x);
-    lua_pushnumber(src->lua, data->pos.y);
-    lua_pushnumber(src->lua, data->press);
-    lua_pushnumber(src->lua, data->dt);
-    lua_pushnumber(src->lua, data->norm.x);
-    lua_pushnumber(src->lua, data->norm.y);
-    lua_pushnumber(src->lua, data->tan.x);
-    lua_pushnumber(src->lua, data->tan.y);
-    lua_pushnumber(src->lua, data->tilt.x);
-    lua_pushnumber(src->lua, data->tilt.y);
-
-    //g_print("%s\n", lua_tostring(src->lua, -1));
+    lua_pushnumber(src->lua, ctx->data.pos.x);
+    lua_pushnumber(src->lua, ctx->data.pos.y);
+    lua_pushnumber(src->lua, ctx->data.press);
+    lua_pushnumber(src->lua, ctx->data.dt);
+    lua_pushnumber(src->lua, ctx->data.norm.x);
+    lua_pushnumber(src->lua, ctx->data.norm.y);
+    lua_pushnumber(src->lua, ctx->data.tan.x);
+    lua_pushnumber(src->lua, ctx->data.tan.y);
+    lua_pushnumber(src->lua, ctx->data.tilt.x);
+    lua_pushnumber(src->lua, ctx->data.tilt.y);
 
     if(lua_pcall(src->lua, 10, 6, 0) != LUA_OK){
         // err
@@ -114,26 +89,31 @@ int brush_pix_draw(struct brush *src, struct layer *dst, struct input_data *data
 
     
     // draw
-
+#if 0
     g_print("opacity: %lf\n", param.opacity);
     g_print("pos: %lf, %lf\n", param.pos.x, param.pos.y);
     g_print("scale: %lf, %lf\n", param.scale.x, param.scale.y);
-    param.pos = data->pos;
+#endif
 
-    cairo_t *ctx = cairo_create(dst->surface);
+    cairo_t *cr = cairo_create(dst->surface);
 
-    cairo_set_operator(ctx, CAIRO_OPERATOR_OVER);
+    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
 
-    cairo_scale(ctx, param.scale.x / dst->scale, param.scale.y / dst->scale);
-    cairo_rotate(ctx, param.angle);
-    cairo_translate(ctx, param.pos.x - dst->x, param.pos.y - dst->x);
+    cairo_scale(cr, param.scale.x / dst->scale / ctx->vp->scale, param.scale.y / dst->scale / ctx->vp->scale);
+    cairo_rotate(cr, param.angle - ctx->vp->angle);
+    
+    struct vec2 pos = param.pos;
+    pos = svec2_subtract(pos, svec2(dst->x, dst->y));
+    pos = svec2_subtract(pos, svec2(ctx->vp->x, ctx->vp->y));
+    pos = svec2_subtract(pos, svec2((double)cairo_image_surface_get_width(pb->surface)/2,
+                (double)cairo_image_surface_get_height(pb->surface)/2));
 
-    cairo_set_source_surface(ctx, pb->surface, param.pos.y, param.pos.y);
+    cairo_set_source_surface(cr, pb->surface, pos.x, pos.y);
 
-    cairo_paint_with_alpha(ctx, param.opacity);
+    cairo_paint_with_alpha(cr, param.opacity);
 
     canvas_update_viewports(dst->canvas);
 
-    cairo_destroy(ctx);
+    cairo_destroy(cr);
     return 1;
 }

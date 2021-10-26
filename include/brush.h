@@ -38,7 +38,7 @@ struct brush{
 
 struct brush_ops{
     void (*free)(struct brush *dst);
-    int (*draw)(struct brush *src, struct layer *dst, struct input_data *data);
+    int (*draw)(struct brush *src, struct layer *dst, struct input_ctx *ctx);
 };
 
 static inline void brush_free(struct brush *dst){
@@ -46,9 +46,9 @@ static inline void brush_free(struct brush *dst){
         dst->ops->free(dst);
 }
 
-static inline int brush_draw(struct brush *src, struct layer *dst, struct input_data *data){
+static inline int brush_draw(struct brush *src, struct layer *dst, struct input_ctx *ctx){
     if(src->ops != NULL && src->ops->draw != NULL)
-        return src->ops->draw(src, dst, data);
+        return src->ops->draw(src, dst, ctx);
     return 0;
 }
 

@@ -33,7 +33,7 @@ int input_data_update(struct input_data *dst, GdkEvent *event){
     dst->norm = svec2_rotate(dst->tan, G_PI/4);
     dst->dt = ((double)dst->time.tv_sec - (double)time_tmp.tv_sec) + ((double)dst->time.tv_usec - (double)time_tmp.tv_usec) / 1000000;
 
-#if 1
+#if 0
     printf("pos:  %lf, %lf\n", dst->pos.x,  dst->pos.y);
     printf("tan:  %lf, %lf\n", dst->tan.x,  dst->tan.y);
     printf("tilt: %lf, %lf\n", dst->tilt.x, dst->tilt.y);
@@ -73,7 +73,7 @@ gboolean input_ctx_event_cb(GtkWidget *widget, GdkEvent *event, gpointer data){
     if(src != GDK_SOURCE_KEYBOARD && gdk_device_get_device_type(dev) != GDK_DEVICE_TYPE_MASTER){
         input_data_update(&dst->data, event);
         if(dst->vp->canvas != NULL && dst->vp->canvas->brush_cur != NULL && dst->vp->canvas->layer_cur != NULL)
-            brush_draw(dst->vp->canvas->brush_cur, dst->vp->canvas->layer_cur, &dst->data);
+            brush_draw(dst->vp->canvas->brush_cur, dst->vp->canvas->layer_cur, dst);
     }
     return FALSE;
 }

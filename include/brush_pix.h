@@ -21,7 +21,7 @@ struct brush_pix *brush_pix_init(struct brush_pix *dst);
 struct brush_pix *brush_pix_loadfolder(struct brush_pix *dst, const char *path);
 
 void brush_pix_free(struct brush *dst);
-int brush_pix_draw(struct brush *src, struct layer *dst, struct input_data *data);
+int brush_pix_draw(struct brush *src, struct layer *dst, struct input_ctx *ctx);
 
 static struct brush_ops brush_pix_ops = {
     .free = brush_pix_free,
