@@ -26,7 +26,6 @@ add_executable(${PROJECT_NAME} ${SRC_FILES})
 
 target_link_libraries(${PROJECT_NAME} ${GTK3_LIBRARIES})
 
-include_directories(${LUA_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${LUA_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} lua)
 
 target_link_libraries(${PROJECT_NAME} m)

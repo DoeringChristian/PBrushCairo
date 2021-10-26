@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <gtk/gtk.h>
 #include "mainwindow.h"
+#include "brush_pix.h"
 
 int main(int argc, char **argv){
 
@@ -28,6 +29,19 @@ int main(int argc, char **argv){
     canvas_push_layer(&c, &l1, 0);
     canvas_push_layer(&c, &l2, 1);
 
+    struct brush_pix pb;
+    brush_pix_loadfolder(&pb, "res/brushes/b1/");
+
+    pb.interface.state = (struct brush_state){
+        .pos = svec2(10, 10),
+        .dt = 0,
+        .pressure = 1.0,
+        .rand = 0,
+        .speed = svec2(11, 10),
+        .tilt = svec2(0, 0),
+    };
+
+    brush_pix_draw(&pb.interface, &l2);
 
     gtk_main();
     return 0;

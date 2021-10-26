@@ -12,19 +12,21 @@ enum brush_pix_fname{
 struct brush_pix{
     struct brush interface;
 
-    cairo_t *operation;
     cairo_surface_t *surface;
 };
 
 struct brush_pix *brush_pix_init(struct brush_pix *dst);
 struct brush_pix *brush_pix_loadfolder(struct brush_pix *dst, const char *path);
-void brush_pix_free(struct brush *dst);
 
-struct brush_ops brush_pix_ops = {
+void brush_pix_free(struct brush *dst);
+int brush_pix_draw(struct brush *src, struct layer *dst);
+
+static struct brush_ops brush_pix_ops = {
     .free = brush_pix_free,
+    .draw = brush_pix_draw,
 };
 
-const char **brush_pix_fnames = (const char *[]){
+static const char **brush_pix_fnames = (const char *[]){
     "brush.lua",
     "brush.png",
 };
